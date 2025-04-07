@@ -2,6 +2,12 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+interface FavoriteUnit {
+  category: string;
+  fromUnit: string;
+  toUnit: string;
+}
+
 interface UserState {
   isLoggedIn: boolean;
   username: string | null;
@@ -16,6 +22,7 @@ interface UserState {
   }[];
   favoriteCategories: string[];
   hasCompletedOnboarding: boolean;
+  favorites: FavoriteUnit[];
   
   // Actions
   login: (username: string, email: string) => void;
@@ -29,6 +36,8 @@ interface UserState {
   }) => void;
   toggleFavoriteCategory: (category: string) => void;
   setOnboardingComplete: () => void;
+  addFavorite: (favorite: FavoriteUnit) => void;
+  removeFavorite: (favorite: FavoriteUnit) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -40,6 +49,7 @@ export const useUserStore = create<UserState>()(
       recentConversions: [],
       favoriteCategories: [],
       hasCompletedOnboarding: false,
+      favorites: [],
       
       login: (username, email) => set({ 
         isLoggedIn: true, 
@@ -82,6 +92,21 @@ export const useUserStore = create<UserState>()(
       }),
       
       setOnboardingComplete: () => set({ hasCompletedOnboarding: true }),
+      
+      addFavorite: (favorite) =>
+        set((state) => ({
+          favorites: [...state.favorites, favorite],
+        })),
+      
+      removeFavorite: (favorite) =>
+        set((state) => ({
+          favorites: state.favorites.filter(
+            (f) =>
+              f.category !== favorite.category ||
+              f.fromUnit !== favorite.fromUnit ||
+              f.toUnit !== favorite.toUnit
+          ),
+        })),
     }),
     {
       name: 'unitify-user-storage',
